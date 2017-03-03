@@ -4,10 +4,10 @@ import os
 import numpy as np
 import cv2
 
-CALIBRATION_FILENAME = "config/calibration.pickle"
+CALIBRATION_FILENAME = "../config/calibration.pickle"
 
 
-def calibrate(source_glob="camera_cal/*.jpg", pattern_size=(9, 6), persist=True):
+def calibrate(source_glob="../camera_cal/*.jpg", pattern_size=(9, 6), persist=True):
     real_world_grid = np.zeros((pattern_size[0] * pattern_size[1], 3), np.float32)
     real_world_grid[:, :2] = np.mgrid[0:pattern_size[0], 0:pattern_size[1]].T.reshape(-1, 2)
 
@@ -23,25 +23,22 @@ def calibrate(source_glob="camera_cal/*.jpg", pattern_size=(9, 6), persist=True)
             real_world_points.append(real_world_grid)
             transformed_points.append(corners)
 
-            image_size = (chessboard_image.shape[1], chessboard_image.shape[0])
+    image_size = (chessboard_image.shape[1], chessboard_image.shape[0])
 
-            calibrated, camera_matrix, distortion_coefficients, rotation_vectors, translation_vectors = \
-                cv2.calibrateCamera(real_world_points, transformed_points, image_size, cameraMatrix=None, distCoeffs=None)
+    calibrated, camera_matrix, distortion_coefficients, rotation_vectors, translation_vectors = \
+        cv2.calibrateCamera(real_world_points, transformed_points, image_size, cameraMatrix=None, distCoeffs=None)
 
-            if calibrated and persist:
-                calibration_info = {
-                    "mtx": camera_matrix,
-                    "dst": distortion_coefficients,
-                    "rot": rotation_vectors,
-                    "tra": translation_vectors
-                }
-                with open(CALIBRATION_FILENAME, "+wb") as f:
-                    pickle.dump(calibration_info, f)
+    if calibrated and persist:
+        calibration_info = {
+            "mtx": camera_matrix,
+            "dst": distortion_coefficients,
+            "rot": rotation_vectors,
+            "tra": translation_vectors
+        }
+        with open(CALIBRATION_FILENAME, "w+b") as f:
+            pickle.dump(calibration_info, f)
 
-            return calibrated, camera_matrix, distortion_coefficients, rotation_vectors, translation_vectors
-
-    raise ValueError()
-
+    return calibrated, camera_matrix, distortion_coefficients, rotation_vectors, translation_vectors
 
 def load_calibration():
     if os.path.exists(CALIBRATION_FILENAME):
